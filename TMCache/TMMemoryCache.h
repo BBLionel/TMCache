@@ -29,36 +29,36 @@ typedef void (^TMMemoryCacheObjectBlock)(TMMemoryCache *cache, NSString *key, id
  A concurrent queue on which all work is done. It is exposed here so that it can be set to target some
  other queue, such as a global concurrent queue with a priority other than the default.
  */
-@property (readonly) dispatch_queue_t queue;
+@property (nonatomic, readonly) dispatch_queue_t queue;
 
 /**
  The total accumulated cost.
  */
-@property (readonly) NSUInteger totalCost;
+@property (nonatomic, readonly) NSUInteger totalCost;
 
 /**
  The maximum cost allowed to accumulate before objects begin to be removed with <trimToCostByDate:>.
  */
-@property (assign) NSUInteger costLimit;
+@property (nonatomic, assign) NSUInteger costLimit;
 
 /**
  The maximum number of seconds an object is allowed to exist in the cache. Setting this to a value
  greater than `0.0` will start a recurring GCD timer with the same period that calls <trimToDate:>.
  Setting it back to `0.0` will stop the timer. Defaults to `0.0`.
  */
-@property (assign) NSTimeInterval ageLimit;
+@property (nonatomic, assign) NSTimeInterval ageLimit;
 
 /**
  When `YES` on iOS the cache will remove all objects when the app receives a memory warning.
  Defaults to `YES`.
  */
-@property (assign) BOOL removeAllObjectsOnMemoryWarning;
+@property (nonatomic, assign) BOOL removeAllObjectsOnMemoryWarning;
 
 /**
  When `YES` on iOS the cache will remove all objects when the app enters the background.
  Defaults to `YES`.
  */
-@property (assign) BOOL removeAllObjectsOnEnteringBackground;
+@property (nonatomic, assign) BOOL removeAllObjectsOnEnteringBackground;
 
 #pragma mark -
 /// @name Event Blocks
@@ -67,49 +67,49 @@ typedef void (^TMMemoryCacheObjectBlock)(TMMemoryCache *cache, NSString *key, id
  A block to be executed just before an object is added to the cache. This block will be excuted within
  a barrier, i.e. all reads and writes are suspended for the duration of the block.
  */
-@property (copy) TMMemoryCacheObjectBlock willAddObjectBlock;
+@property (nonatomic, copy) TMMemoryCacheObjectBlock willAddObjectBlock;
 
 /**
  A block to be executed just before an object is removed from the cache. This block will be excuted
  within a barrier, i.e. all reads and writes are suspended for the duration of the block.
  */
-@property (copy) TMMemoryCacheObjectBlock willRemoveObjectBlock;
+@property (nonatomic, copy) TMMemoryCacheObjectBlock willRemoveObjectBlock;
 
 /**
  A block to be executed just before all objects are removed from the cache as a result of <removeAllObjects:>.
  This block will be excuted within a barrier, i.e. all reads and writes are suspended for the duration of the block.
  */
-@property (copy) TMMemoryCacheBlock willRemoveAllObjectsBlock;
+@property (nonatomic, copy) TMMemoryCacheBlock willRemoveAllObjectsBlock;
 
 /**
  A block to be executed just after an object is added to the cache. This block will be excuted within
  a barrier, i.e. all reads and writes are suspended for the duration of the block.
  */
-@property (copy) TMMemoryCacheObjectBlock didAddObjectBlock;
+@property (nonatomic, copy) TMMemoryCacheObjectBlock didAddObjectBlock;
 
 /**
  A block to be executed just after an object is removed from the cache. This block will be excuted
  within a barrier, i.e. all reads and writes are suspended for the duration of the block.
  */
-@property (copy) TMMemoryCacheObjectBlock didRemoveObjectBlock;
+@property (nonatomic, copy) TMMemoryCacheObjectBlock didRemoveObjectBlock;
 
 /**
  A block to be executed just after all objects are removed from the cache as a result of <removeAllObjects:>.
  This block will be excuted within a barrier, i.e. all reads and writes are suspended for the duration of the block.
  */
-@property (copy) TMMemoryCacheBlock didRemoveAllObjectsBlock;
+@property (nonatomic, copy) TMMemoryCacheBlock didRemoveAllObjectsBlock;
 
 /**
  A block to be executed upon receiving a memory warning (iOS only) potentially in parallel with other blocks on the <queue>.
  This block will be executed regardless of the value of <removeAllObjectsOnMemoryWarning>. Defaults to `nil`.
  */
-@property (copy) TMMemoryCacheBlock didReceiveMemoryWarningBlock;
+@property (nonatomic, copy) TMMemoryCacheBlock didReceiveMemoryWarningBlock;
 
 /**
  A block to be executed when the app enters the background (iOS only) potentially in parallel with other blocks on the <queue>.
  This block will be executed regardless of the value of <removeAllObjectsOnEnteringBackground>. Defaults to `nil`.
  */
-@property (copy) TMMemoryCacheBlock didEnterBackgroundBlock;
+@property (nonatomic, copy) TMMemoryCacheBlock didEnterBackgroundBlock;
 
 #pragma mark -
 /// @name Shared Cache

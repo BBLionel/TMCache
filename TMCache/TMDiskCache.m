@@ -1,4 +1,5 @@
 #import "TMDiskCache.h"
+#import <CommonCrypto/CommonDigest.h>
 
 #define TMDiskCacheError(error) if (error) { NSLog(@"%@ (%d) ERROR: %@", \
                                     [[NSString stringWithUTF8String:__FILE__] lastPathComponent], \
@@ -45,11 +46,13 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (instancetype)initWithName:(NSString *)name rootPath:(NSString *)rootPath
 {
-    if (!name)
-        return nil;
+//    if (!name)
+//        return nil;
 
     if (self = [super init]) {
-        _name = [name copy];
+        if (name && [name length]) {
+            _name = [name copy];
+        }
         _queue = [TMDiskCache sharedQueue];
 
         _willAddObjectBlock = nil;
@@ -66,8 +69,13 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
         _dates = [[NSMutableDictionary alloc] init];
         _sizes = [[NSMutableDictionary alloc] init];
 
-        NSString *pathComponent = [[NSString alloc] initWithFormat:@"%@.%@", TMDiskCachePrefix, _name];
-        _cacheURL = [NSURL fileURLWithPathComponents:@[ rootPath, pathComponent ]];
+//        NSString *pathComponent = [[NSString alloc] initWithFormat:@"%@.%@", TMDiskCachePrefix, _name];
+//        _cacheURL = [NSURL fileURLWithPathComponents:@[ rootPath, pathComponent ]];
+        if (_name && [_name length] && rootPath && [rootPath length]) {
+            _cacheURL = [NSURL fileURLWithPathComponents:@[ rootPath, _name ]];
+        }else if (rootPath && [rootPath length]) {
+            _cacheURL = [NSURL fileURLWithPathComponents:@[ rootPath]];
+        }
 
         __weak TMDiskCache *weakSelf = self;
 
@@ -97,6 +105,18 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
     return cache;
 }
 
++ (instancetype)sharedCacheWithRootPath:(NSString *)rootPath
+{
+    static id cache;
+    static dispatch_once_t predicate;
+    
+    dispatch_once(&predicate, ^{
+        cache = [[self alloc] initWithName:nil rootPath:rootPath];
+    });
+    
+    return cache;
+}
+
 + (dispatch_queue_t)sharedQueue
 {
     static dispatch_queue_t queue;
@@ -113,10 +133,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (NSURL *)encodedFileURLForKey:(NSString *)key
 {
-    if (![key length])
+    if (![key length] || !_cacheURL)
         return nil;
 
-    return [_cacheURL URLByAppendingPathComponent:[self encodedString:key]];
+    return [_cacheURL URLByAppendingPathComponent:[self md5EncodedString:key]];
 }
 
 - (NSString *)keyForEncodedFileURL:(NSURL *)url
@@ -140,6 +160,24 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
                                                                         charsToEscape,
                                                                         kCFStringEncodingUTF8);
     return (__bridge_transfer NSString *)escapedString;
+}
+
+- (NSString *)md5EncodedString:(NSString *)string
+{
+    if (![string length])
+        return @"";
+    
+    const char *cStr = [string UTF8String];
+    unsigned char result[CC_MD5_DIGEST_LENGTH];
+    CC_MD5(cStr, (CC_LONG)strlen(cStr), result);
+    
+    return [NSString stringWithFormat:
+            @"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+            result[0], result[1], result[2], result[3],
+            result[4], result[5], result[6], result[7],
+            result[8], result[9], result[10], result[11],
+            result[12], result[13], result[14], result[15]
+            ];
 }
 
 - (NSString *)decodedString:(NSString *)string
@@ -195,7 +233,7 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 +(BOOL)moveItemAtURLToTrash:(NSURL *)itemURL
 {
-    if (![[NSFileManager defaultManager] fileExistsAtPath:[itemURL path]])
+    if (!itemURL || ![[NSFileManager defaultManager] fileExistsAtPath:[itemURL path]])
         return NO;
 
     NSError *error = nil;
@@ -232,6 +270,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (BOOL)createCacheDirectory
 {
+    if (!_cacheURL) {
+        return NO;
+    }
+    
     if ([[NSFileManager defaultManager] fileExistsAtPath:[_cacheURL path]])
         return NO;
 
@@ -247,6 +289,10 @@ NSString * const TMDiskCacheSharedName = @"TMDiskCacheShared";
 
 - (void)initializeDiskProperties
 {
+    if (!_cacheURL) {
+        return ;
+    }
+    
     NSUInteger byteCount = 0;
     NSArray *keys = @[ NSURLContentModificationDateKey, NSURLTotalFileAllocatedSizeKey ];
 

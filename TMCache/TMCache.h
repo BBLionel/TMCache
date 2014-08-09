@@ -29,27 +29,27 @@ typedef void (^TMCacheObjectBlock)(TMCache *cache, NSString *key, id object);
 /**
  The name of this cache, used to create the <diskCache> and also appearing in stack traces.
  */
-@property (readonly) NSString *name;
+@property (nonatomic, readonly) NSString *name;
 
 /**
  A concurrent queue on which blocks passed to the asynchronous access methods are run.
  */
-@property (readonly) dispatch_queue_t queue;
+@property (nonatomic, readonly) dispatch_queue_t queue;
 
 /**
  Synchronously retrieves the total byte count of the <diskCache> on the shared disk queue.
  */
-@property (readonly) NSUInteger diskByteCount;
+@property (nonatomic, readonly) NSUInteger diskByteCount;
 
 /**
  The underlying disk cache, see <TMDiskCache> for additional configuration and trimming options.
  */
-@property (readonly) TMDiskCache *diskCache;
+@property (nonatomic, readonly) TMDiskCache *diskCache;
 
 /**
  The underlying memory cache, see <TMMemoryCache> for additional configuration and trimming options.
  */
-@property (readonly) TMMemoryCache *memoryCache;
+@property (nonatomic, readonly) TMMemoryCache *memoryCache;
 
 #pragma mark -
 /// @name Initialization
@@ -60,6 +60,14 @@ typedef void (^TMCacheObjectBlock)(TMCache *cache, NSString *key, id object);
  @result The shared singleton cache instance.
  */
 + (instancetype)sharedCache;
+
+/**
+ A shared cache with rootPath.
+ 
+ @param rootPath The path of the cache on disk.
+ @result The shared singleton cache instance.
+ */
++ (instancetype)sharedCacheWithRootPath:(NSString *)rootPath;
 
 /**
  Multiple instances with the same name are allowed and can safely access
@@ -103,6 +111,26 @@ typedef void (^TMCacheObjectBlock)(TMCache *cache, NSString *key, id object);
  @param block A block to be executed concurrently after the object has been stored, or nil.
  */
 - (void)setObject:(id <NSCoding>)object forKey:(NSString *)key block:(TMCacheObjectBlock)block;
+
+/**
+ Stores an object in the cache for the specified key. This method returns immediately and executes the
+ passed block after the object has been stored, potentially in parallel with other blocks on the <queue>.
+ 
+ @param object An object to store in the  disk cache.
+ @param key A key to associate with the object. This string will be copied.
+ @param block A block to be executed concurrently after the object has been stored, or nil.
+ */
+- (void)setObjectOnlyDisk:(id <NSCoding>)object forKey:(NSString *)key block:(TMCacheObjectBlock)block;
+
+/**
+ Stores an object in the cache for the specified key. This method returns immediately and executes the
+ passed block after the object has been stored, potentially in parallel with other blocks on the <queue>.
+ 
+ @param object An object to store in the memory cache.
+ @param key A key to associate with the object. This string will be copied.
+ @param block A block to be executed concurrently after the object has been stored, or nil.
+ */
+- (void)setObjectOnlyMemory:(id <NSCoding>)object forKey:(NSString *)key block:(TMCacheObjectBlock)block;
 
 /**
  Removes the object for the specified key. This method returns immediately and executes the passed

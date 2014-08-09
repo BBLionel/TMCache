@@ -30,11 +30,13 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (instancetype)initWithName:(NSString *)name rootPath:(NSString *)rootPath
 {
-    if (!name)
-        return nil;
+//    if (!name)
+//        return nil;
 
     if (self = [super init]) {
-        _name = [name copy];
+        if (name && [name length]) {
+            _name = [name copy];
+        }
         
         NSString *queueName = [[NSString alloc] initWithFormat:@"%@.%p", TMCachePrefix, self];
         _queue = dispatch_queue_create([queueName UTF8String], DISPATCH_QUEUE_CONCURRENT);
@@ -59,6 +61,18 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
         cache = [[self alloc] initWithName:TMCacheSharedName];
     });
 
+    return cache;
+}
+
++ (instancetype)sharedCacheWithRootPath:(NSString *)rootPath
+{
+    static id cache;
+    static dispatch_once_t predicate;
+    
+    dispatch_once(&predicate, ^{
+        cache = [[self alloc] initWithName:nil rootPath:rootPath];
+    });
+    
     return cache;
 }
 
@@ -155,6 +169,72 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
         #if !OS_OBJECT_USE_OBJC
         dispatch_release(group);
         #endif
+    }
+}
+
+- (void)setObjectOnlyDisk:(id <NSCoding>)object forKey:(NSString *)key block:(TMCacheObjectBlock)block
+{
+    if (!key || !object)
+        return;
+    
+    dispatch_group_t group = nil;
+    TMDiskCacheObjectBlock diskBlock = nil;
+    
+    if (block) {
+        group = dispatch_group_create();
+        dispatch_group_enter(group);
+        
+        diskBlock = ^(TMDiskCache *cache, NSString *key, id <NSCoding> object, NSURL *fileURL) {
+            dispatch_group_leave(group);
+        };
+    }
+    
+    [_diskCache setObject:object forKey:key block:diskBlock];
+    
+    if (group) {
+        __weak TMCache *weakSelf = self;
+        dispatch_group_notify(group, _queue, ^{
+            TMCache *strongSelf = weakSelf;
+            if (strongSelf)
+                block(strongSelf, key, object);
+        });
+        
+#if !OS_OBJECT_USE_OBJC
+        dispatch_release(group);
+#endif
+    }
+}
+
+- (void)setObjectOnlyMemory:(id <NSCoding>)object forKey:(NSString *)key block:(TMCacheObjectBlock)block
+{
+    if (!key || !object)
+        return;
+    
+    dispatch_group_t group = nil;
+    TMMemoryCacheObjectBlock memBlock = nil;
+    
+    if (block) {
+        group = dispatch_group_create();
+        dispatch_group_enter(group);
+        
+        memBlock = ^(TMMemoryCache *cache, NSString *key, id object) {
+            dispatch_group_leave(group);
+        };
+    }
+    
+    [_memoryCache setObject:object forKey:key block:memBlock];
+    
+    if (group) {
+        __weak TMCache *weakSelf = self;
+        dispatch_group_notify(group, _queue, ^{
+            TMCache *strongSelf = weakSelf;
+            if (strongSelf)
+                block(strongSelf, key, object);
+        });
+        
+#if !OS_OBJECT_USE_OBJC
+        dispatch_release(group);
+#endif
     }
 }
 

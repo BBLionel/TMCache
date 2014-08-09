@@ -36,14 +36,14 @@ typedef void (^TMDiskCacheObjectBlock)(TMDiskCache *cache, NSString *key, id <NS
 /**
  The name of this cache, used to create a directory under Library/Caches and also appearing in stack traces.
  */
-@property (readonly) NSString *name;
+@property (nonatomic, readonly) NSString *name;
 
 /**
  The URL of the directory used by this cache, usually `Library/Caches/com.tumblr.TMDiskCache.(name)`
  
  @warning Do not interact with files under this URL except on the <sharedQueue>.
  */
-@property (readonly) NSURL *cacheURL;
+@property (nonatomic, readonly) NSURL *cacheURL;
 
 /**
  The total number of bytes used on disk, as reported by `NSURLTotalFileAllocatedSizeKey`.
@@ -60,7 +60,7 @@ typedef void (^TMDiskCacheObjectBlock)(TMDiskCache *cache, NSString *key, id <NS
         NSLog(@"accurate, unchanging byte count: %d", [[TMDiskCache sharedCache] byteCount]);
     });
  */
-@property (readonly) NSUInteger byteCount;
+@property (nonatomic, readonly) NSUInteger byteCount;
 
 /**
  The maximum number of bytes allowed on disk. This value is checked every time an object is set, if the written
@@ -68,7 +68,7 @@ typedef void (^TMDiskCacheObjectBlock)(TMDiskCache *cache, NSString *key, id <NS
  
  @warning Do not read this property on the <sharedQueue> (including asynchronous method blocks).
  */
-@property (assign) NSUInteger byteLimit;
+@property (nonatomic, assign) NSUInteger byteLimit;
 
 /**
  The maximum number of seconds an object is allowed to exist in the cache. Setting this to a value
@@ -77,7 +77,7 @@ typedef void (^TMDiskCacheObjectBlock)(TMDiskCache *cache, NSString *key, id <NS
  
  @warning Do not read this property on the <sharedQueue> (including asynchronous method blocks).
  */
-@property (assign) NSTimeInterval ageLimit;
+@property (nonatomic, assign) NSTimeInterval ageLimit;
 
 #pragma mark -
 /// @name Event Blocks
@@ -85,34 +85,34 @@ typedef void (^TMDiskCacheObjectBlock)(TMDiskCache *cache, NSString *key, id <NS
 /**
  A block to be executed just before an object is added to the cache. The queue waits during execution.
  */
-@property (copy) TMDiskCacheObjectBlock willAddObjectBlock;
+@property (nonatomic, copy) TMDiskCacheObjectBlock willAddObjectBlock;
 
 /**
  A block to be executed just before an object is removed from the cache. The queue waits during execution.
  */
-@property (copy) TMDiskCacheObjectBlock willRemoveObjectBlock;
+@property (nonatomic, copy) TMDiskCacheObjectBlock willRemoveObjectBlock;
 
 /**
  A block to be executed just before all objects are removed from the cache as a result of <removeAllObjects:>.
  The queue waits during execution.
  */
-@property (copy) TMDiskCacheBlock willRemoveAllObjectsBlock;
+@property (nonatomic, copy) TMDiskCacheBlock willRemoveAllObjectsBlock;
 
 /**
  A block to be executed just after an object is added to the cache. The queue waits during execution.
  */
-@property (copy) TMDiskCacheObjectBlock didAddObjectBlock;
+@property (nonatomic, copy) TMDiskCacheObjectBlock didAddObjectBlock;
 
 /**
  A block to be executed just after an object is removed from the cache. The queue waits during execution.
  */
-@property (copy) TMDiskCacheObjectBlock didRemoveObjectBlock;
+@property (nonatomic, copy) TMDiskCacheObjectBlock didRemoveObjectBlock;
 
 /**
  A block to be executed just after all objects are removed from the cache as a result of <removeAllObjects:>.
  The queue waits during execution.
  */
-@property (copy) TMDiskCacheBlock didRemoveAllObjectsBlock;
+@property (nonatomic, copy) TMDiskCacheBlock didRemoveAllObjectsBlock;
 
 #pragma mark -
 /// @name Initialization
@@ -123,6 +123,14 @@ typedef void (^TMDiskCacheObjectBlock)(TMDiskCache *cache, NSString *key, id <NS
  @result The shared singleton cache instance.
  */
 + (instancetype)sharedCache;
+
+/**
+ A shared cache with rootPath.
+ 
+ @param rootPath The path of the cache on disk.
+ @result The shared singleton cache instance.
+ */
++ (instancetype)sharedCacheWithRootPath:(NSString *)rootPath;
 
 /**
  A shared serial queue, used by all instances of this class. Use `dispatch_set_target_queue` to integrate
