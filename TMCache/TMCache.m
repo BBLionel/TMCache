@@ -80,8 +80,13 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)objectForKey:(NSString *)key block:(TMCacheObjectBlock)block
 {
-    if (!key || !block)
+    if (!key || !block) {
+        if (block) {
+            block(self, key, nil);
+        }
         return;
+    }
+    
 
     __weak TMCache *weakSelf = self;
 
@@ -134,8 +139,13 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)setObject:(id <NSCoding>)object forKey:(NSString *)key block:(TMCacheObjectBlock)block
 {
-    if (!key || !object)
+    if (!key || !object) {
+        if (block) {
+            block(self, key, object);
+        }
         return;
+    }
+    
 
     dispatch_group_t group = nil;
     TMMemoryCacheObjectBlock memBlock = nil;
@@ -174,8 +184,12 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)setObjectOnlyDisk:(id <NSCoding>)object forKey:(NSString *)key block:(TMCacheObjectBlock)block
 {
-    if (!key || !object)
+    if (!key || !object) {
+        if (block) {
+            block(self, key, object);
+        }
         return;
+    }
     
     dispatch_group_t group = nil;
     TMDiskCacheObjectBlock diskBlock = nil;
@@ -207,8 +221,12 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)setObjectOnlyMemory:(id <NSCoding>)object forKey:(NSString *)key block:(TMCacheObjectBlock)block
 {
-    if (!key || !object)
+    if (!key || !object) {
+        if (block) {
+            block(self, key, object);
+        }
         return;
+    }
     
     dispatch_group_t group = nil;
     TMMemoryCacheObjectBlock memBlock = nil;
@@ -240,8 +258,12 @@ NSString * const TMCacheSharedName = @"TMCacheShared";
 
 - (void)removeObjectForKey:(NSString *)key block:(TMCacheObjectBlock)block
 {
-    if (!key)
+    if (!key) {
+        if (block) {
+            block(self, key, nil);
+        }
         return;
+    }
     
     dispatch_group_t group = nil;
     TMMemoryCacheObjectBlock memBlock = nil;

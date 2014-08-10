@@ -225,10 +225,14 @@ NSString * const TMMemoryCachePrefix = @"com.tumblr.TMMemoryCache";
 
 - (void)objectForKey:(NSString *)key block:(TMMemoryCacheObjectBlock)block
 {
-    NSDate *now = [[NSDate alloc] init];
-    
-    if (!key || !block)
+    if (!key || !block) {
+        if (block) {
+            block(self, key, nil);
+        }
         return;
+    }
+    
+    NSDate *now = [[NSDate alloc] init];
 
     __weak TMMemoryCache *weakSelf = self;
 
@@ -259,10 +263,14 @@ NSString * const TMMemoryCachePrefix = @"com.tumblr.TMMemoryCache";
 
 - (void)setObject:(id)object forKey:(NSString *)key withCost:(NSUInteger)cost block:(TMMemoryCacheObjectBlock)block
 {
-    NSDate *now = [[NSDate alloc] init];
-
-    if (!key || !object)
+    if (!key || !object) {
+        if (block) {
+            block(self, key, object);
+        }
         return;
+    }
+    
+    NSDate *now = [[NSDate alloc] init];
 
     __weak TMMemoryCache *weakSelf = self;
 
@@ -299,8 +307,12 @@ NSString * const TMMemoryCachePrefix = @"com.tumblr.TMMemoryCache";
 
 - (void)removeObjectForKey:(NSString *)key block:(TMMemoryCacheObjectBlock)block
 {
-    if (!key)
+    if (!key) {
+        if (block) {
+            block(self, key, nil);
+        }
         return;
+    }
 
     __weak TMMemoryCache *weakSelf = self;
 
